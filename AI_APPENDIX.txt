@@ -2,14 +2,13 @@
 APÊNDICE - DECLARAÇÃO DE USO DE FERRAMENTAS DE IA
 
 Disciplina: Inteligência Computacional Aplicada
-Trabalho: Homework 2 - Models for Regression (Vinhos)
+Trabalho: Homework 2 
 Autores: João Otávio Brasil Nascimento, Danilo Bezerra Vieira, Iuri Fernandes Bastos, 
          Jonas Albuquerque Araújo
 
-Abaixo, documentamos os principais prompts utilizados junto às IAs
+Abaixo documentamos os principais prompts utilizados junto às IAs
 durante o desenvolvimento do trabalho, com o propósito de esclarecer dúvidas 
 teóricas, corrigir sintaxes de código e auxiliar na geração de gráficos.
-
 
 
 PROMPT 1: 
@@ -158,4 +157,3 @@ iterações é acessado através do atributo `mlp.loss_curve_`.
 Para visualizar o comportamento do treinamento, basta usar:
 `plt.plot(mlp.loss_curve_)`
 `plt.title(f"Curva de Perda (Parada na época {mlp.n_iter_})")`
-================================================================================
