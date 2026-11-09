@@ -1,0 +1,161 @@
+
+APÊNDICE - DECLARAÇÃO DE USO DE FERRAMENTAS DE IA
+
+Disciplina: Inteligência Computacional Aplicada
+Trabalho: Homework 2 - Models for Regression (Vinhos)
+Autores: João Otávio Brasil Nascimento, Danilo Bezerra Vieira, Iuri Fernandes Bastos, 
+         Jonas Albuquerque Araújo
+
+Abaixo, documentamos os principais prompts utilizados junto às IAs
+durante o desenvolvimento do trabalho, com o propósito de esclarecer dúvidas 
+teóricas, corrigir sintaxes de código e auxiliar na geração de gráficos.
+
+
+
+PROMPT 1: 
+"Por que calcular a OLS via inversão de matrizes não é a 
+abordagem padrão na maioria das bibliotecas de machine learning, mas no nosso 
+conjunto de dados de vinhos ela funcionou bem?"
+
+RESPOSTA SINTETIZADA:
+As equações normais exigem a inversão da matriz de covariância (X^T X). Esse 
+procedimento tem alta complexidade computacional. Em datasets modernos com 
+milhares de variáveis, a inversão matricial é proibitiva; por isso usam-se 
+otimizadores iterativos (Gradiente Descendente). No dataset Wine, como temos 
+apenas D=11 preditores, a dimensão da matriz é muito pequena (12x12), tornando 
+a solução analítica via inversão praticamente instantânea e exata.
+
+PROMPT 2: 
+"Ao comparar os coeficientes da nossa OLS construída from scratch com o 
+LinearRegression do scikit-learn, notei diferenças na casa de 10^{-11}. Tem algum erro de álgebra na implementação?"
+
+RESPOSTA SINTETIZADA:
+Não há erro. Diferenças infinitesimais nessa ordem de grandeza decorrem de 
+ruído de arredondamento de precisão de ponto flutuante do processador (float64) 
+durante a inversão da matriz. Além disso, bibliotecas como scikit-learn não 
+fazem a inversão bruta (X^T X)^{-1}; elas utilizam técnicas numéricas mais 
+estáveis, como decomposição Singular Value Decomposition (SVD), o que resulta 
+em ínfimas discrepâncias nos últimos dígitos decimais.
+
+PROMPT 3: 
+"Como faço para plotar um gráfico de barras no matplotlib com os coeficientes 
+beta do scratch e do built-in lado a lado para 11 variáveis?"
+
+RESPOSTA SINTETIZADA:
+Use a função `plt.bar()`. Defina as posições do eixo x com `x = np.arange(len(features))` 
+e configure uma largura para as barras, ex: `width = 0.35`. Depois plote as 
+duas séries deslocando os eixos:
+`plt.bar(x - width/2, beta_scratch, width)`
+`plt.bar(x + width/2, beta_builtin, width)`
+Para ajustar os rótulos de forma legível, rotacione em 45 graus alinhando 
+pela direita: `plt.xticks(x, features, rotation=45, ha='right')`.
+
+
+PROMPT 4 : 
+"Por que o Lasso consegue zerar alguns coeficientes?"
+
+RESPOSTA SINTETIZADA:
+Isso ocorre pela geometria da função de perda. O Lasso utiliza a norma L1 
+(soma dos módulos). A região de restrição L1 tem o formato de um losango no 
+espaço de parâmetros. Quando os contornos elípticos do erro (mínimos quadrados) 
+se expandem, eles quase sempre "tocam" a restrição nas pontas agudas desse 
+losango (que ficam exatamente em cima dos eixos), fazendo com que um ou mais 
+coeficientes caiam exatamente em zero. Já o L2 forma uma esfera, não possuindo 
+vértices, encolhendo os betas assintoticamente sem anulá-los.
+
+PROMPT 5 : 
+"Ao implementar a descida por coordenadas no Lasso, não 
+estou entendendo o operador de soft-thresholding. Como traduzo a fórmula 
+dele para o código Python de atualização de cada beta?"
+
+RESPOSTA :
+O 'soft-thresholding' é um filtro porta matemático. Você calcula a contribuição 
+bruta de resíduo para aquele atributo (vamos chamar de `rho`). A função em 
+Python seria algo como:
+`def soft_threshold(rho, lambda_val):`
+`    if rho < -lambda_val: return rho + lambda_val`
+`    elif rho > lambda_val: return rho - lambda_val`
+`    else: return 0.0`
+Se a relevância (`rho`) da variável for menor que a penalização (`lambda`), ela 
+é zerada. Se for maior, ela sofre uma compressão exata no valor de lambda.
+
+PROMPT 6 : 
+"Meu perfil de cross-validation do Lasso plota o RMSE em função de Alpha, 
+mas como testei valores como 10^{-4} até 1, o gráfico ficou achatado à esquerda. 
+Como melhoro a visualização?"
+
+RESPOSTA SINTETIZADA:
+Você deve plotar o hiperparâmetro de penalização usando uma escala logarítmica, 
+já que ele cresce exponencialmente. Troque a função `plt.plot()` do matplotlib 
+por `plt.semilogx()` ao gerar a linha, ou adicione `plt.xscale('log')` antes 
+de invocar o plot. Isso garantirá que sua grade de busca fique uniformemente 
+espaçada visualmente, mostrando claramente onde ocorre o underfitting.
+
+PROMPT 7: 
+"Por que faz sentido usar o PLS em vez de aplicar o PCA e depois realizar 
+uma regressão (PCR)? Qual é a vantagem de considerar o Y na redução?"
+
+RESPOSTA SINTETIZADA:
+O PCA (Principal Component Analysis) é um algoritmo não-supervisionado. Ele 
+procura as direções (componentes) onde a variância dos preditores (X) é máxima, 
+ignorando completamente a variável de saída (Y). É possível que o PCA selecione 
+um componente ruidoso que não tem relação com o sabor do vinho. Já o PLS é 
+supervisionado: ele cria as variáveis latentes buscando a máxima covariância 
+entre X e Y, garantindo que a redução de dimensionalidade capture exatamente 
+aquilo que impacta a nota de qualidade.
+
+PROMPT 8: 
+"Como faço para codificar a validação cruzada estruturada em K-Fold usando o 
+scikit-learn para selecionar a quantidade ótima de componentes do PLS variando 
+de 1 a 11?"
+
+RESPOSTA SINTETIZADA:
+Você não precisa fazer o loop manual de divisão de dados. 
+1. Importe: `from sklearn.model_selection import KFold, cross_val_score`
+2. Instancie: `kf = KFold(n_splits=5, shuffle=True, random_state=42)`
+3. Crie um loop: `for i in range(1, 12):`
+4. Dentro do loop instancie: `pls = PLSRegression(n_components=i)`
+5. Obtenha os erros: `scores = cross_val_score(pls, X, y, cv=kf, scoring='neg_mean_squared_error')`
+Basta tirar a média, calcular a raiz quadrada (RMSE) e armazenar a lista para 
+ver qual o 'i' gerou o menor erro.
+
+PROMPT 9: 
+"Quero destacar o ponto ótimo do PLS no meu gráfico plotando tipo
+uma linha vertical tracejada indicando esse marco. Qual a função usar?"
+
+RESPOSTA SINTETIZADA:
+Utilize a função `plt.axvline()`. Você pode fixar o valor que representa os 
+componentes no eixo X. Exemplo de uso:
+`plt.axvline(x=5, color='black', linestyle='--', label='Ótimo: 5 Componentes')`
+Não esqueça de usar `plt.legend()` para exibir a legenda no gráfico final.
+
+
+PROMPT 10: 
+"Nossos resultados revelaram que a Rede Neural perdeu para os modelos lineares 
+na base de vinho tinto, mas ganhou folgadamente na de vinho branco. Isso faz 
+sentido estatístico ou é um erro de modelagem nosso?"
+
+RESPOSTA SINTETIZADA:
+Faz muito sentido e ilustra o "trade-off" de viés-variância. A rede MLP possui 
+alta capacidade para ajustar fronteiras não-lineares. No vinho tinto, a relação 
+físico-química dominante parece ser estritamente aditiva/linear (com muito 
+ruído). A rede neural tenta se ajustar a esse ruído humano no treinamento 
+(overfitting) e perde capacidade de generalização. Já o vinho branco exibe 
+propriedades inerentemente não-lineares, com interações orgânicas complexas, o 
+que permite à MLP utilizar sua capacidade arquitetural para brilhar onde os 
+lineares colapsam.
+
+
+PROMPT 11: 
+"Na MLPRegressor usando `early_stopping=True`, o treinamento para antes do 
+limite de `max_iter` para evitar overfitting. Tem como extrair quantas épocas 
+foram rodadas e plotar a curva de perda (loss) desse treinamento?"
+
+RESPOSTA SINTETIZADA:
+Sim. Após o treinamento (`mlp.fit`), o número real de iterações fica armazenado 
+no atributo interno `mlp.n_iter_`. O histórico do erro (perda) ao longo dessas 
+iterações é acessado através do atributo `mlp.loss_curve_`.
+Para visualizar o comportamento do treinamento, basta usar:
+`plt.plot(mlp.loss_curve_)`
+`plt.title(f"Curva de Perda (Parada na época {mlp.n_iter_})")`
+================================================================================
