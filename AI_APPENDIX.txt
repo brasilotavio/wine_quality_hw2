@@ -1,5 +1,5 @@
 
-APÊNDICE - DECLARAÇÃO DE USO DE FERRAMENTAS DE IA
+Apêndice: Declaração de uso de IA
 
 Disciplina: Inteligência Computacional Aplicada
 Trabalho: Homework 2 
